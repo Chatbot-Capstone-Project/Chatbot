@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #chatbox {
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+
+        #chatlogs {
+            height: 350px;
+            overflow-y: auto;
+        }
+
+        .botText, .userText {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .botText {
+            background-color: #e0e0e0;
+            align-self: flex-start;
+        }
+
+        .userText {
+            background-color: #0084ff;
+            color: white;
+            align-self: flex-end;
+        }
+
+        #userInput {
+            outline: none;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbox">
+        <div id="chatlogs">
+            <div id="botStarterMessage" class="botText">
+                <span>Welcome! Ask me anything.</span>
+            </div>
+        </div>
+        <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off"/>
+    </div>
+
+    <script>
+        document.getElementById("userInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                let userText = "User: " + this.value;
+                this.value = "";
+                document.getElementById("chatlogs").innerHTML += '<div class="userText"><span>' + userText + '</span></div>';
+                fetch('/ask', {
+                    method: 'POST',
+                    body: new URLSearchParams('message=' + userText)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("chatlogs").innerHTML += '<div class="botText"><span>' + data.message + '</span></div>';
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
