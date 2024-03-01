@@ -1,51 +1,50 @@
+from collections import deque
+
+import chromadb
 from flask import Flask, render_template, request, jsonify
-from langchain.document_loaders import PyPDFLoader, OnlinePDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-import os
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
 from langchain.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains.question_answering import load_qa_chain
 
-
 app = Flask(__name__)
-
-
-@app.route('/')
-def home():
-    return render_template('chat.html')
-
+db_path = '/Users/konishbharathrajjonnalagadda/Desktop/UNH/capstone/chromaDB_client'
+chroma_client = chromadb.PersistentClient(path=db_path)
+collection = chroma_client.get_collection(name="chatbot_data")
 callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+current_history = []
 
 
-def extract_pdf_and_prepare_docs():
-    folder_path = "PDFs/"
-    files = os.listdir(folder_path)
-    pdf_files = [file for file in files if file.endswith('.pdf')]
-    data_list=[]
-    for pdf in pdf_files:
-        pdf_path = folder_path+pdf
-        loader = PyPDFLoader(pdf_path)
-        data = loader.load()
-        data_list.append(data)
-    text_splitter=RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
-    docs=[]
-    for data in data_list:
-        doc=text_splitter.split_documents(data)
-        docs.extend(doc)
-    return docs
+class SentenceQueue:
+    def __init__(self, max_length):
+        self.queue = deque(maxlen=max_length)
+
+    def add_sentence(self, sentence):
+        self.queue.append(sentence)
+
+    def display_queue(self):
+        for sentence in self.queue:
+            print(sentence)
+
+    def combine_sentences(self):
+        combined_sentence = " ".join(self.queue)
+        return combined_sentence
+
+    def clear_queue(self):
+        self.queue.clear()
 
 
-docs = extract_pdf_and_prepare_docs()
+sentence_queue = SentenceQueue(10)
+
+
+class Document:
+    def __init__(self, page_content, metadata=None):
+        self.page_content = page_content
+        self.metadata = metadata if metadata is not None else {}
 
 
 def create_LLM_Llama2_chain():
-	model_name_or_path = "TheBloke/Llama-2-13B-chat-GGUF"
-	model_basename = "llama-2-13b-chat.Q5_K_M.gguf"
-    model_path = hf_hub_download(repo_id=model_name_or_path, filename=model_basename)
+    model_path = '/Users/konishbharathrajjonnalagadda/Desktop/UNH/capstone/model/llama-2-13b-chat.Q5_K_M.gguf'
     n_gpu_layers = 1  # Set low since no GPU is used, adjust based on your system's performance.
     n_batch = 1  # Significantly reduced for CPU processing to minimize memory usage.
 
@@ -60,7 +59,7 @@ def create_LLM_Llama2_chain():
         verbose=True,
     )
 
-    chain=load_qa_chain(llm, chain_type="stuff")
+    chain = load_qa_chain(llm, chain_type="stuff")
 
     return chain
 
@@ -68,55 +67,36 @@ def create_LLM_Llama2_chain():
 chain = create_LLM_Llama2_chain()
 
 
-def get_sentence_transformers_model():
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-    return model
+@app.route('/')
+def home():
+    return render_template('chat.html')
 
 
-model = get_sentence_transformers_model()
+callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
 
 
-def prepare_doc_embeddings(docs):
-    doc_embeddings = embed_docs(docs)
-    return doc_embeddings
-
-
-def embed_docs(docs, model):
-    embedded_docs=[model.encode(doc.page_content) for doc in docs]
-    return embedded_docs
-
-
-doc_embeddings = embed_docs(docs,model)
-
-
-
-
-def custom_top3_similarity_search(query, docs, model, doc_embeddings):
-    query_embedding = model.encode([query])
-    similarities = cosine_similarity(query_embedding, doc_embeddings)
-    top_n_indices = np.argsort(similarities[0])[::-1][:3]
-    top_docs = [docs[index] for index in top_n_indices]
-    return top_docs
-
-def generate_chatbot_response(query,chain,top_docs):
-    simialr_docs=top_docs
+def generate_chatbot_response(query, chain, collection):
+    results = collection.query(
+        query_texts=[query],
+        n_results=3)
+    simialr_docs = [Document(page_content=text) for text in results['documents']]
     result = chain.run(input_documents=simialr_docs, question=query)
     return result
-
-
-
-
-
 
 
 @app.route('/ask', methods=['POST'])
 def ask():
     user_message = request.form['message']
-    top_docs = custom_top3_similarity_search(user_message,docs,model,doc_embeddings)
-    response = generate_chatbot_response(user_message,chain,top_docs)
+    sentence_queue.add_sentence(user_message)
+    query = sentence_queue.combine_sentences()
+    response = generate_chatbot_response(query, chain, collection)
+    current_history.append(('human message : ' + user_message, 'AI message : ' + response))
+    sentence_queue.add_sentence(response)
     return jsonify({'message': response})
 
 
 
 if __name__ == "__main__":
     app.run(debug=True)
+    print(current_history)
+
