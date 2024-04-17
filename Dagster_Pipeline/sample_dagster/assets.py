@@ -12,8 +12,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import chromadb
 from chromadb.utils import embedding_functions
 from sentence_transformers import SentenceTransformer
-#from your_etl_script import PyPDFLoader, RecursiveCharacterTextSplitter, chromadb, embedding_functions
-#from your_etl_script import webscrap, download_pdfs, convert_php_to_pdf, collect_data, store_in_chroma_db
 
 @asset
 def webscrap(context):
