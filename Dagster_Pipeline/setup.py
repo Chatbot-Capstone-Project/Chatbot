@@ -14,8 +14,8 @@ setup(
         "pypdf",
         "fpdf",
         "langchain",
-        "langchain_community",  # This package is hypothetical as it wasn't recognized. Check for the correct name.
-        "chromadb",  # This package is hypothetical as it wasn't recognized. Check for the correct name.
+        "langchain_community",
+        "chromadb",
         "sentence_transformers"
         
     ],
