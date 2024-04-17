@@ -15,7 +15,7 @@ from sentence_transformers import SentenceTransformer
 
 @asset
 def webscrap(context):
-    sitemap_url = "https://www.newhaven.edu/sitemap.xml"  # this can be made configurable
+    sitemap_url = "https://www.newhaven.edu/sitemap.xml"
     response = requests.get(sitemap_url)
     soup = BeautifulSoup(response.content, 'xml')
     keywords = [
