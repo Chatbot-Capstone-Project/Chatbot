@@ -1,0 +1,23 @@
+Metadata-Version: 2.1
+Name: sample_dagster
+Version: 0.0.0
+Requires-Dist: dagster
+Requires-Dist: dagster-cloud
+Requires-Dist: requests
+Requires-Dist: beautifulsoup4
+Requires-Dist: lxml
+Requires-Dist: selenium
+Requires-Dist: webdriver_manager
+Requires-Dist: pypdf
+Requires-Dist: fpdf
+Requires-Dist: langchain
+Requires-Dist: langchain_community
+Requires-Dist: chromadb
+Requires-Dist: sentence_transformers
+Requires-Dist: PyMuPDF
+Requires-Dist: bitsandbytes
+Requires-Dist: peft@ git+https://github.com/huggingface/peft.git
+Requires-Dist: accelerate@ git+https://github.com/huggingface/accelerate.git
+Provides-Extra: dev
+Requires-Dist: dagster-webserver; extra == "dev"
+Requires-Dist: pytest; extra == "dev"

@@ -1,0 +1,2 @@
+git+https://github.com/huggingface/peft.git#egg=peft
+git+https://github.com/huggingface/accelerate.git#egg=accelerate

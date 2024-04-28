@@ -1,0 +1,21 @@
+dagster
+dagster-cloud
+requests
+beautifulsoup4
+lxml
+selenium
+webdriver_manager
+pypdf
+fpdf
+langchain
+langchain_community
+chromadb
+sentence_transformers
+PyMuPDF
+bitsandbytes
+peft@ git+https://github.com/huggingface/peft.git
+accelerate@ git+https://github.com/huggingface/accelerate.git
+
+[dev]
+dagster-webserver
+pytest
